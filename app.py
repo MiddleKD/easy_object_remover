@@ -69,7 +69,7 @@ def run_ocr(image):
     ocr_result, mask_image = ocr_inference(img, ocr_model, conf_threshold=0.5)
     rgba_mask = mask_image.convert("RGB")
     rgba_mask.putalpha(mask_image)
-    rgba_mask.convert("RGB").show()
+
     for cur in ((None, None), ({"background":img, "layers":[rgba_mask], "composite":img}, ocr_result)):
         yield cur
         time.sleep(0.5)
