@@ -63,16 +63,16 @@ def run_inference(edited_image, is_kandinsky, resize_size):
     
     return output
 
-def run_ocr(image):
-    img = image["background"]
+def run_ocr(image, ocr_mask_rank):
+    img = image["background"].convert("RGB")
 
-    ocr_result, mask_image = ocr_inference(img, ocr_model, conf_threshold=0.5)
+    ocr_result, mask_image = ocr_inference(img, ocr_model, conf_threshold=0.3, mask_rank=ocr_mask_rank)
     rgba_mask = mask_image.convert("RGB")
     rgba_mask.putalpha(mask_image)
 
     for cur in ((None, None), ({"background":img, "layers":[rgba_mask], "composite":img}, ocr_result)):
         yield cur
-        time.sleep(0.5)
+        time.sleep(1.0)
 
 def output_to_input(image):
     image = image.resize((st_width, st_height))
@@ -107,6 +107,12 @@ with gr.Blocks(js=js_func) as demo:
                 show_download_button=False,
                 sources=("upload"),
             )
+            ocr_mask_rank = gr.Number(value=1,
+                                      precision=0,
+                                      label="Number of mask",
+                                      minimum=1,
+                                      maximum=20,
+                                      info="텍스트 마스크 개수")
             ocr_btn = gr.Button(value="Get text mask", variant="secondary")
             ocr_text_box = gr.TextArea(label="Text from image")
         
@@ -128,7 +134,7 @@ with gr.Blocks(js=js_func) as demo:
             run_btn = gr.Button(variant="primary")
             to_input = gr.Button(value="Pass to input", variant="secondary")
 
-    ocr_btn.click(run_ocr, [input_image], [input_image, ocr_text_box])
+    ocr_btn.click(run_ocr, [input_image, ocr_mask_rank], [input_image, ocr_text_box])
     run_btn.click(run_inference, [input_image, is_kandinsky, resize_size_box], output_image)
     to_input.click(output_to_input, [output_image], input_image)
 

@@ -1,3 +1,4 @@
+import os
 from PIL import Image
 import torch
 import numpy as np
@@ -8,6 +9,7 @@ from transformers import CLIPImageProcessor, CLIPVisionModelWithProjection
 from kandinsky_inpaint_adapter.utils import (make_positive_style, 
                                              make_negative_style,
                                              prepare_img_and_mask)
+
 
 class KandinskyInpaintAdapter:
     def __init__(self, 
@@ -30,15 +32,18 @@ class KandinskyInpaintAdapter:
         image_embeds = self.image_encoder(clip_images).image_embeds.to(dtype=torch.float16).to(self.device)
         return image_embeds
 
-    def __call__(self, image: Image.Image, mask: Image.Image, seed=-1):
+    def __call__(self, image: Image.Image, mask: Image.Image, seed=-1, use_negative_embedding_file=False):
         image, mask = prepare_img_and_mask(image, mask)
         width, height = image.size
 
         positive_style = make_positive_style(image, mask)
-        negative_style = make_negative_style(image, mask)
-
         positive_embeds = self.get_image_embedding(positive_style)
-        negative_embeds = self.get_image_embedding(negative_style)
+        
+        if use_negative_embedding_file == True:
+            negative_embeds = torch.load(os.path.join(os.path.dirname(__file__), "negative_embedding.pth"))
+        else:
+            negative_style = make_negative_style(image, mask)
+            negative_embeds = self.get_image_embedding(negative_style)
 
         generator = torch.Generator()
         if seed == -1:
@@ -58,3 +63,4 @@ class KandinskyInpaintAdapter:
         ).images[0]
         
         return output
+    
