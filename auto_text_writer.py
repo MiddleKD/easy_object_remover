@@ -133,10 +133,9 @@ def translate_text(text_list):
 
 def main(image, ocr_model, remover_model, mask_rank=None, font_path="./Roboto-Medium.ttf"):
 
-    ocr_results, mask_images = ocr_inference(image, ocr_model, conf_threshold=0.1, mask_rank=mask_rank, return_mask_list=True)
-    cleaned_image = image
-    for _, mask_image in zip(ocr_results, mask_images):
-        cleaned_image = remove_object(cleaned_image, mask_image, remover_model)
+    ocr_results, [concated_mask_image, mask_images] = ocr_inference(image, ocr_model, conf_threshold=0.1, mask_rank=mask_rank, return_mask_mode="all")
+
+    cleaned_image = remove_object(image, concated_mask_image, remover_model)
 
     translated_texts = translate_text(ocr_results)
 

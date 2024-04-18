@@ -88,7 +88,10 @@ def output_to_input(image):
         time.sleep(5.0)
 
 def run_auto_text_writer(image, ocr_mask_rank, resize_size):
+    global st_width, st_height
+    
     image = image["background"].convert("RGB")
+    st_width, st_height = image.size
 
     # if all(cur >= resize_size for cur in image.size):
     #     image = resize_store_ratio(image, resize_size)
